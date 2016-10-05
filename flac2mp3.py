@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Convert music files into mp3 files
 
 Use `ffmpeg` to convert flac to mp3 files.
@@ -21,7 +22,7 @@ from pathlib import Path
 from termcolor import colored
 
 
-def main(inputPath, outPath, parallel=0):
+def main(inputPath, outPath, parallel=0, verbose=False):
     """Convert to mp3
 
     Convert all flac files to mp3 using `ffmpeg`.
@@ -61,11 +62,18 @@ def main(inputPath, outPath, parallel=0):
             newFile = newPath / flacFile
             newFile = newFile.with_suffix('.mp3')
 
+            logDevice = subprocess.PIPE
+            if not verbose:
+                logDevice = subprocess.DEVNULL
+
             if not newFile.exists():
                 cmds = ["ffmpeg", "-i", str(name), "-qscale:a",
                         "0", str(newFile)]
-                print("Running Command: ", cmds)
-                subprocess.call(cmds)
+                msg = colored("Running Command: ", 'green')
+                print(msg, " ".join(cmds))
+
+                subprocess.call(cmds, stdout=logDevice,
+                                stderr=subprocess.STDOUT)
     else:
         # Break musicFiles into parallel chunks
         for pathSubset in chunks(musicFiles, parallel):
@@ -81,10 +89,20 @@ def main(inputPath, outPath, parallel=0):
                 newFile = newPath / flacFile
                 newFile = newFile.with_suffix('.mp3')
 
+                logDevice = subprocess.PIPE
+                if not verbose:
+                    logDevice = subprocess.DEVNULL
+
                 if not newFile.exists():
                     cmds = ["ffmpeg", "-i", str(name), "-qscale:a",
                             "0", str(newFile)]
-                    p = mp.Process(target=subprocess.call, args=(cmds,))
+                    msg = colored("Running Command: ", 'green')
+                    print(msg, " ".join(cmds))
+                    log = {'stdout': logDevice,
+                           'stderr': subprocess.STDOUT}
+                    p = mp.Process(target=subprocess.call,
+                                   args=[cmds],
+                                   kwargs=log)
                     jobs.append(p)
                     p.start()
 
@@ -115,6 +133,8 @@ if __name__ == "__main__":
     parser.add_argument('-j', '--parallel', default=0, type=int,
                         help="No. of parallel processes to run")
     parser.add_argument('-o', '--output', default=".", help="output Path")
+    parser.add_argument('-v', '--verbose', action="store_true",
+                        default=False, help="output full ffmpeg log")
 
     args = parser.parse_args()
 
@@ -165,7 +185,7 @@ if __name__ == "__main__":
         raise FileNotFoundError(msg)
 
     try:
-        main(inputPath, output, args.parallel)
+        main(inputPath, output, args.parallel, args.verbose)
     except KeyboardInterrupt:
         print(colored("Keyboard Interruption!", "red"))
         try:
