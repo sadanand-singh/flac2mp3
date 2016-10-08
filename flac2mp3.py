@@ -137,8 +137,8 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', default=".", help="output Path")
     parser.add_argument('-v', '--verbose', action="store_true",
                         default=False, help="output full ffmpeg log")
-    qlist = [0, 1, 3, 4, 5, 6, 7, 8, 9]
-    msg = "Quality of mp3, (0-9), default is 3 that corresponds to ~196 kbps"
+    qlist = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    msg = "Quality of mp3, (0-9), default is 3 that corresponds to ~196 kbps."
     msg += " Larger value refers to lower Quality."
     parser.add_argument('-q', '--quality', default=3, type=int, choices=qlist,
                         help=msg)
