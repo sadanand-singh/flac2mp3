@@ -22,7 +22,7 @@ from pathlib import Path
 from termcolor import colored
 
 
-def main(inputPath, outPath, parallel=0, verbose=False):
+def main(inputPath, outPath, quality=0, parallel=0, verbose=False):
     """Convert to mp3
 
     Convert all flac files to mp3 using `ffmpeg`.
@@ -51,6 +51,7 @@ def main(inputPath, outPath, parallel=0, verbose=False):
             if name.suffix in formats:
                 musicFiles.append(name)
 
+    cmds = ["ffmpeg", "-i", str(name), "-qscale:a", str(quality)]
     if parallel <= 0:
         for name in musicFiles:
             newPath = name.relative_to(inputPath)
@@ -67,8 +68,8 @@ def main(inputPath, outPath, parallel=0, verbose=False):
                 logDevice = subprocess.DEVNULL
 
             if not newFile.exists():
-                cmds = ["ffmpeg", "-i", str(name), "-qscale:a",
-                        "0", str(newFile)]
+                cmds.append(str(newFile))
+
                 msg = colored("Running Command: ", 'green')
                 print(msg, " ".join(cmds))
 
@@ -94,10 +95,11 @@ def main(inputPath, outPath, parallel=0, verbose=False):
                     logDevice = subprocess.DEVNULL
 
                 if not newFile.exists():
-                    cmds = ["ffmpeg", "-i", str(name), "-qscale:a",
-                            "0", str(newFile)]
+                    cmds.append(str(newFile))
+
                     msg = colored("Running Command: ", 'green')
                     print(msg, " ".join(cmds))
+
                     log = {'stdout': logDevice,
                            'stderr': subprocess.STDOUT}
                     p = mp.Process(target=subprocess.call,
@@ -135,6 +137,11 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', default=".", help="output Path")
     parser.add_argument('-v', '--verbose', action="store_true",
                         default=False, help="output full ffmpeg log")
+    qlist = [0, 1, 3, 4, 5, 6, 7, 8, 9]
+    msg = "Quality of mp3, (0-9), default is 3 that corresponds to ~196 kbps"
+    msg += " Larger value refers to lower Quality."
+    parser.add_argument('-q', '--quality', default=3, type=int, choices=qlist,
+                        help=msg)
 
     args = parser.parse_args()
 
@@ -170,7 +177,7 @@ if __name__ == "__main__":
             try:
                 tempFile.touch(exist_ok=True)
             except Exception:
-                msg = "Output path is not a writ-able"
+                msg = "Output path is not writ-able!"
                 print(colored(msg, "red"))
                 isOutputValid = False
             else:
@@ -178,14 +185,21 @@ if __name__ == "__main__":
     else:
         msg = "Output path does not exist"
         print(colored(msg, "red"))
-        isOutputValid = False
+
+        # try creating the output directory
+        try:
+            output.mkdir(parents=True, exist_ok=True)
+        except:
+            isOutputValid = False
+        else:
+            isOutputValid = True
 
     if not isOutputValid:
         msg = colored("\nPlease Enter a valid output path", "red")
         raise FileNotFoundError(msg)
 
     try:
-        main(inputPath, output, args.parallel, args.verbose)
+        main(inputPath, output, args.quality, args.parallel, args.verbose)
     except KeyboardInterrupt:
         print(colored("Keyboard Interruption!", "red"))
         try:
