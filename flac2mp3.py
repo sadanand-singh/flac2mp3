@@ -184,15 +184,21 @@ if __name__ == "__main__":
             else:
                 tempFile.unlink()
     else:
-        msg = "Output path does not exist"
+        msg = "Output path {0} does not exist".format(str(output))
         print(colored(msg, "red"))
 
         # try creating the output directory
+        msg = "Trying to create {0}...".format(str(output))
+        print(colored(msg, "cyan"))
         try:
             output.mkdir(parents=True, exist_ok=True)
         except:
+            msg = "Output path {0} could not be created".format(str(output))
+            print(colored(msg, "red"))
             isOutputValid = False
         else:
+            msg = "SUCESS! {0} Created...".format(str(output))
+            print(colored(msg, "cyan"))
             isOutputValid = True
 
     if not isOutputValid:
