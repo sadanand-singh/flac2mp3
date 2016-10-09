@@ -51,7 +51,6 @@ def main(inputPath, outPath, quality=0, parallel=0, verbose=False):
             if name.suffix in formats:
                 musicFiles.append(name)
 
-    cmds = ["ffmpeg", "-i", str(name), "-qscale:a", str(quality)]
     if parallel <= 0:
         for name in musicFiles:
             newPath = name.relative_to(inputPath)
@@ -68,7 +67,8 @@ def main(inputPath, outPath, quality=0, parallel=0, verbose=False):
                 logDevice = subprocess.DEVNULL
 
             if not newFile.exists():
-                cmds.append(str(newFile))
+                cmds = ["ffmpeg", "-i", str(name), "-qscale:a"]
+                cmds += [str(quality), str(newFile)]
 
                 msg = colored("Running Command: ", 'green')
                 print(msg, " ".join(cmds))
@@ -95,7 +95,8 @@ def main(inputPath, outPath, quality=0, parallel=0, verbose=False):
                     logDevice = subprocess.DEVNULL
 
                 if not newFile.exists():
-                    cmds.append(str(newFile))
+                    cmds = ["ffmpeg", "-i", str(name), "-qscale:a"]
+                    cmds += [str(quality), str(newFile)]
 
                     msg = colored("Running Command: ", 'green')
                     print(msg, " ".join(cmds))
