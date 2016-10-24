@@ -68,7 +68,8 @@ def main(inputPath, outPath, quality=0, parallel=0, verbose=False):
 
             if not newFile.exists():
                 cmds = ["ffmpeg", "-i", str(name), "-qscale:a"]
-                cmds += [str(quality), str(newFile)]
+                cmds += [str(quality), "-map_metadata", "0", "-id3v2_version"]
+                cmds += ["3", str(newFile)]
 
                 msg = colored("Running Command: ", 'green')
                 print(msg, " ".join(cmds))
@@ -96,7 +97,8 @@ def main(inputPath, outPath, quality=0, parallel=0, verbose=False):
 
                 if not newFile.exists():
                     cmds = ["ffmpeg", "-i", str(name), "-qscale:a"]
-                    cmds += [str(quality), str(newFile)]
+                    cmds += [str(quality), "-map_metadata", "0"]
+                    cmds += ["-id3v2_version", "3", str(newFile)]
 
                     msg = colored("Running Command: ", 'green')
                     print(msg, " ".join(cmds))
