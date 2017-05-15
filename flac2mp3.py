@@ -2,7 +2,7 @@
 
 """Convert music files into mp3 files
 
-Use `ffmpeg` to convert flac to mp3 files.
+Use `ffmpeg` to convert flac to mp3/aac/mp4 files.
 The directory structure of the input path is maintained.
 The process can be performed in parallel using the -j option
 
@@ -22,7 +22,7 @@ from pathlib import Path
 from termcolor import colored
 
 
-def main(inputPath, outPath, quality=0, parallel=0, verbose=False):
+def main(inputPath, outPath, outfileType=".mp3", quality=0, parallel=0, verbose=False):
     """Convert to mp3
 
     Convert all flac files to mp3 using `ffmpeg`.
@@ -33,6 +33,8 @@ def main(inputPath, outPath, quality=0, parallel=0, verbose=False):
         Path where to search for flac files
     outPath : :obj:`path`
         Base path where to write all files
+    outfileType : :obj:`str`
+        Filetype of output - mp3 vs aac
     parallel : {number}, optional
         Number of threads to run for conversion.
         (the default is 0, single processing)
@@ -60,16 +62,16 @@ def main(inputPath, outPath, quality=0, parallel=0, verbose=False):
             newPath.mkdir(parents=True, exist_ok=True)
 
             newFile = newPath / flacFile
-            newFile = newFile.with_suffix('.mp3')
+            newFile = newFile.with_suffix(outfileType)
 
             logDevice = subprocess.PIPE
             if not verbose:
                 logDevice = subprocess.DEVNULL
 
             if not newFile.exists():
-                cmds = ["ffmpeg", "-i", str(name), "-qscale:a"]
-                cmds += [str(quality), "-map_metadata", "0", "-id3v2_version"]
-                cmds += ["3", str(newFile)]
+                cmds = ["ffmpeg", "-i", str(name), "-q:a"]
+                cmds += [str(quality), "-strict", "experimental"]
+                cmds += ["-rtpflags", "latm", str(newFile)]
 
                 msg = colored("Running Command: ", 'green')
                 print(msg, " ".join(cmds))
@@ -89,16 +91,16 @@ def main(inputPath, outPath, quality=0, parallel=0, verbose=False):
                 newPath.mkdir(parents=True, exist_ok=True)
 
                 newFile = newPath / flacFile
-                newFile = newFile.with_suffix('.mp3')
+                newFile = newFile.with_suffix(outfileType)
 
                 logDevice = subprocess.PIPE
                 if not verbose:
                     logDevice = subprocess.DEVNULL
 
                 if not newFile.exists():
-                    cmds = ["ffmpeg", "-i", str(name), "-qscale:a"]
-                    cmds += [str(quality), "-map_metadata", "0"]
-                    cmds += ["-id3v2_version", "3", str(newFile)]
+                    cmds = ["ffmpeg", "-i", str(name), "-q:a"]
+                    cmds += [str(quality), "-strict", "experimental"]
+                    cmds += ["-rtpflags", "latm", str(newFile)]
 
                     msg = colored("Running Command: ", 'green')
                     print(msg, " ".join(cmds))
@@ -138,6 +140,7 @@ if __name__ == "__main__":
     parser.add_argument('-j', '--parallel', default=0, type=int,
                         help="No. of parallel processes to run")
     parser.add_argument('-o', '--output', default=".", help="output Path")
+    parser.add_argument('-t', '--outfileType', default=".mp3", help="Output File Type")
     parser.add_argument('-v', '--verbose', action="store_true",
                         default=False, help="output full ffmpeg log")
     qlist = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -208,7 +211,7 @@ if __name__ == "__main__":
         raise FileNotFoundError(msg)
 
     try:
-        main(inputPath, output, args.quality, args.parallel, args.verbose)
+        main(inputPath, output, args.outfileType, args.quality, args.parallel, args.verbose)
     except KeyboardInterrupt:
         print(colored("Keyboard Interruption!", "red"))
         try:
